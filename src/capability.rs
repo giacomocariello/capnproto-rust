@@ -27,11 +27,14 @@ use any_pointer;
 use traits::{FromPointerReader, FromPointerBuilder};
 use private::capability::{CallContextHook, ClientHook, RequestHook, ResponseHook};
 
-pub struct ResultFuture<Results, Pipeline> {
+pub struct RemotePromise<Results, Pipeline> {
     pub marker : ::std::marker::PhantomData<Results>,
-    pub answer_port : ::std::sync::mpsc::Receiver<Box<ResponseHook+Send>>,
-    pub answer_result : Result<Box<ResponseHook+Send>, ()>,
-    pub pipeline : Pipeline,
+
+    #[cfg(feature = "rpc")]
+    pub answer_promise: ::gj::Promise<Box<ResponseHook+Send>>,
+
+    pub answer_result: Result<Box<ResponseHook+Send>, ()>,
+    pub pipeline: Pipeline,
 }
 
 pub struct Request<Params, Results, Pipeline> {
@@ -44,10 +47,12 @@ impl <Params, Results, Pipeline > Request <Params, Results, Pipeline> {
         Request { hook : hook, marker: ::std::marker::PhantomData }
     }
 }
+
+#[cfg(feature = "rpc")]
 impl <Params, Results, Pipeline : FromTypelessPipeline> Request <Params, Results, Pipeline> {
-    pub fn send(self) -> ResultFuture<Results, Pipeline> {
-        let ResultFuture {answer_port, answer_result, pipeline, ..} = self.hook.send();
-        ResultFuture { answer_port : answer_port, answer_result : answer_result,
+    pub fn send(self) -> RemotePromise<Results, Pipeline> {
+        let RemotePromise {answer_promise, answer_result, pipeline, ..} = self.hook.send();
+        RemotePromise { answer_promise : answer_promise, answer_result : answer_result,
                         pipeline : FromTypelessPipeline::new(pipeline),
                         marker : ::std::marker::PhantomData }
     }

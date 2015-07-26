@@ -21,7 +21,7 @@
 
 use any_pointer;
 use MessageSize;
-use capability::{CallContext, Request, ResultFuture, Server};
+use capability::{CallContext, Request, RemotePromise, Server};
 
 pub trait ResponseHook:Send + ::std::any::Any {
     fn get<'a>(&'a mut self) -> any_pointer::Reader<'a>;
@@ -29,7 +29,7 @@ pub trait ResponseHook:Send + ::std::any::Any {
 
 pub trait RequestHook {
     fn message<'a>(&'a mut self) -> &'a mut ::message::Builder<::message::HeapAllocator>;
-    fn send<'a>(self : Box<Self>) -> ResultFuture<any_pointer::Reader<'a>, any_pointer::Pipeline>;
+    fn send<'a>(self : Box<Self>) -> RemotePromise<any_pointer::Reader<'a>, any_pointer::Pipeline>;
 }
 
 pub trait ClientHook : Send + ::std::any::Any {
